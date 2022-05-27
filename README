@@ -34,7 +34,7 @@ Steps to test gpio:
 
 4. cd ~/gpio-buildroot-4SBCs/build-buildroot-4SBCs/rpi4b
    git clone git://git.buildroot.net/buildroot
-   cp -r ./gpio_test ./buildroot/package
+   cp -r ../../rpi4b/gpio_test ./buildroot/package
    vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
 menu "Misc"
         source "package/gpio_test/Config.in"
@@ -57,7 +57,7 @@ endmenu
 
 5. cd ~/gpio-buildroot-4SBCs/build-buildroot-4SBCs/radxa
    git clone git://git.buildroot.net/buildroot
-   cp -r ./gpio_test ./buildroot/package
+   cp -r ../../radxa/gpio_test ./buildroot/package
    vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
 menu "Misc"
         source "package/gpio_test/Config.in"
@@ -84,7 +84,7 @@ endmenu
    cp ./patches/Makefile ./kernel/arch/arm64/boot/dts/rockchip/
 
    git clone git://git.buildroot.net/buildroot
-   cp -r ./gpio_test ./buildroot/package
+   cp -r ../../rk3328/gpio_test ./buildroot/package
    vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
 menu "Misc"
         source "package/gpio_test/Config.in"
@@ -113,7 +113,7 @@ endmenu
    cp ./patches/gcc-wrapper.py ./debian_kernel/scripts/
 
    git clone git://git.buildroot.net/buildroot
-   cp -r ./gpio_test ./buildroot/package
+   cp -r ../../tinker/gpio_test ./buildroot/package
    vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
 menu "Misc"
         source "package/gpio_test/Config.in"
