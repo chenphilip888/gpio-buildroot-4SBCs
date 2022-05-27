@@ -1,0 +1,295 @@
+This is to test gpio in buildroot for following SBC's:
+rpi4b  ( Raspberry Pi 4B )
+radxa  ( Rock Pi 4B plus )
+rk3328 ( Renegade ROC-RK3328-CC )
+tinker ( ASUS TinkerBoard )
+
+Parts required:
+1. Seeed Grove starter kit LED, button, buzzer, Grove-LCD RGB Backlight V3.0 JHD1313M2.
+2. Analog Servo.
+3. Adafruit SSD1306 128x32 SPI OLED Display.
+
+The following 8 tests are included: ( see below for tests summary )
+1. uart test
+2. led test
+3. button test
+4. pwm led test
+5. i2c lcd test
+6. tongsong
+7. servo
+8. spi oled test
+
+Steps to test gpio:
+
+1. Install cross compiler:
+   wget https://releases.linaro.org/components/toolchain/binaries/7.3-2018.05/aarch64-linux-gnu/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz
+   sudo tar xvf gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu.tar.xz  -C /usr/local/
+   wget https://releases.linaro.org/components/toolchain/binaries/7.3-2018.05/arm-linux-gnueabihf/gcc-linaro-7.3.1-2018.05-x86_64_arm-linux-gnueabihf.tar.xz
+   sudo tar xvf gcc-linaro-7.3.1-2018.05-x86_64_arm-linux-gnueabihf.tar.xz -C /usr/local/
+
+2. git clone https://github.com/chenphilip888/gpio-buildroot-4SBCs.git
+   cd ~/gpio-buildroot-4SBCs
+
+3. git clone https://github.com/chenphilip888/build-buildroot-4SBCs.git
+
+4. cd ~/gpio-buildroot-4SBCs/build-buildroot-4SBCs/rpi4b
+   git clone git://git.buildroot.net/buildroot
+   cp -r ./gpio_test ./buildroot/package
+   vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
+menu "Misc"
+        source "package/gpio_test/Config.in"
+endmenu
+
+   vi ./patches/rpi4b_defconfig ( append BR2_PACKAGE_GPIO_TEST=y )
+   cp ./patches/rpi4b_defconfig ./buildroot/configs
+   cp ./patches/raspberrypi4/* ./buildroot/board/raspberrypi4/
+   cd buildroot
+   make clean
+   make rpi4b_defconfig
+   make
+
+   The result is in ./output/images/sdcard.img
+
+   sudo dd if=./output/images/sdcard.img of=/dev/mmcblk0 bs=4096 conv=notrunc,fsync
+   sudo e2fsck -p -f /dev/mmcblk0p2
+   sudo resize2fs /dev/mmcblk0p2
+   sudo e2label /dev/mmcblk0p2 rootfs
+
+5. cd ~/gpio-buildroot-4SBCs/build-buildroot-4SBCs/radxa
+   git clone git://git.buildroot.net/buildroot
+   cp -r ./gpio_test ./buildroot/package
+   vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
+menu "Misc"
+        source "package/gpio_test/Config.in"
+endmenu
+
+   vi ./patches/rockpi4_defconfig ( append BR2_PACKAGE_GPIO_TEST=y )
+   cp ./patches/rockpi4_defconfig ./buildroot/configs
+   \rm -rf ./buildroot/board/radxa/rockpi-4
+   cp -r ./patches/rockpi-4 ./buildroot/board/radxa
+   cd buildroot
+   make clean
+   make rockpi4_defconfig
+   make
+
+   The result is in ./output/images/sdcard.img
+
+   sudo dd if=./output/images/sdcard.img of=/dev/mmcblk0 bs=4096 conv=notrunc,fsync
+   sudo e2fsck -p -f /dev/mmcblk0p5
+   sudo resize2fs /dev/mmcblk0p5
+   sudo e2label /dev/mmcblk0p5 rootfs
+
+6. cd ~/gpio-buildroot-4SBCs/build-buildroot-4SBCs/rk3328
+   git clone https://github.com/FireflyTeam/kernel.git -b rk3328/firefly
+   cp ./patches/Makefile ./kernel/arch/arm64/boot/dts/rockchip/
+
+   git clone git://git.buildroot.net/buildroot
+   cp -r ./gpio_test ./buildroot/package
+   vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
+menu "Misc"
+        source "package/gpio_test/Config.in"
+endmenu
+
+   vi ./patches/local.mk ( change to your path )
+   cp ./patches/local.mk ./buildroot
+   vi ./patches/rk3328_defconfig ( append BR2_PACKAGE_GPIO_TEST=y )
+   cp ./patches/rk3328_defconfig ./buildroot/configs
+   \rm -rf ./buildroot/board/roc-rk3328-cc
+   cp -r ./patches/roc-rk3328-cc ./buildroot/board
+   cd buildroot
+   make clean
+   make rk3328_defconfig
+   make
+
+   The result is in ./output/images/sdcard.img
+
+   sudo dd if=./output/images/sdcard.img of=/dev/mmcblk0 bs=4096 conv=notrunc,fsync
+   sudo e2fsck -p -f /dev/mmcblk0p5
+   sudo resize2fs /dev/mmcblk0p5
+   sudo e2label /dev/mmcblk0p5 rootfs
+
+7. cd ~/gpio-buildroot-4SBCs/build-buildroot-4SBCs/tinker
+   git clone https://github.com/TinkerBoard/debian_kernel.git -b release
+   cp ./patches/gcc-wrapper.py ./debian_kernel/scripts/
+
+   git clone git://git.buildroot.net/buildroot
+   cp -r ./gpio_test ./buildroot/package
+   vi ./buildroot/package/Config.in ( add follows before the last 'endmenu':
+menu "Misc"
+        source "package/gpio_test/Config.in"
+endmenu
+
+   vi ./patches/local.mk ( change to your path )
+   cp ./patches/local.mk ./buildroot
+   vi ./patches/tinker_defconfig ( append BR2_PACKAGE_GPIO_TEST=y )
+   cp ./patches/tinker_defconfig ./buildroot/configs
+   \rm -rf ./buildroot/board/asus/tinker
+   cp -r ./patches/tinker ./buildroot/board/asus
+   cd buildroot
+   make clean
+   make tinker_defconfig
+   make
+
+   The result is in ./output/images/sdcard.img
+
+   sudo dd if=./output/images/sdcard.img of=/dev/mmcblk0 bs=4096 conv=notrunc,fsync
+   sudo e2fsck -p -f /dev/mmcblk0p2
+   sudo resize2fs /dev/mmcblk0p2
+   sudo e2label /dev/mmcblk0p2 rootfs
+
+-------------------------------------------------------------------------
+
+plugin sdcard to SBC
+login:
+username: root
+password: linaro
+
+setup wifi:
+Note: Both radxa and rk3328 need to plugin usb wifi dongle.
+      radxa on board wifi is not working in buildroot due to lack of software.
+      rk3328 has no on board wifi.
+
+vi /etc/wpa_supplicant.conf ( change to:
+update_config=1
+country=US
+network={
+        ssid="MYNETWORK"
+        psk="secret"
+}
+
+vi /etc/network/interfaces ( delete everything after iface lo inet loopback )
+
+vi /etc/rc.local ( change to:
+#!/bin/sh
+wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf  ( radxa uses wlan1 )
+
+chmod 755 /etc/rc.local
+
+vi /etc/init.d/rcS ( append:
+source /etc/rc.local
+
+reboot
+
+check kernel driver readiness for rpi4b:
+cat /proc/device-tree/soc/serial@7e201400/status  ( uart 2 )
+cat /proc/device-tree/soc/pwm@7e20c000/status  ( pwm 1 )
+cat /proc/device-tree/soc/i2c@7e804000/status  ( i2c-1 )
+cat /proc/device-tree/soc/spi@7e204000/status  ( spi-0 )
+
+check kernel driver readiness for radxa:
+cat /proc/device-tree/serial@ff370000/status ( uart 4 )
+cat /proc/device-tree/pwm@ff420010/status  ( pwm 1 )
+cat /proc/device-tree/i2c@ff160000/status  ( i2c-7 )
+cat /proc/device-tree/spi@ff1e0000/status  ( spi-2 )
+
+check kernel driver readiness for rk3328:
+cat /proc/device-tree/serial@ff120000/status ( uart 1 )
+cat /proc/device-tree/pwm@ff1b0020/status  ( pwm 2 )
+cat /proc/device-tree/i2c@ff160000/status  ( i2c-1 )
+cat /proc/device-tree/spi@ff190000/status  ( spi-0 )
+
+check kernel driver readiness for tinker:
+cat /proc/device-tree/serial@ff1c0000/status ( uart 4 )
+cat /proc/device-tree/pwm@ff680030/status  ( pwm 3 )
+cat /proc/device-tree/i2c@ff140000/status  ( i2c-1 )
+cat /proc/device-tree/spi@ff130000/status  ( spi-2 )
+
+date
+aplay -l
+gpio_test
+   
+-----------------------------------------------------------------------------
+
+Here are the summary of the tests:
+
+These tests used Seeed Grove starter kit LED, button, buzzer, Grove-LCD RGB Backlight V3.0 JHD1313M2, Analog Servo and Adafruit SSD1306 128x32 SPI OLED Display.
+
+1. uart test.
+   This test will send uart tx to uart rx for loopback.
+   It sends 0 to 255 to uart tx and receives 0 to 255 from uart rx.
+   Connect gpio pin 27 to pin 28. ( rpi4b uart 2 ).
+   Connect gpio pin 19 to pin 21. ( radxa uart 4 ).
+   Connect gpio pin  8 to pin 10. ( rk3328 uart 1 ).
+   Connect gpio pin 13 to pin 15. ( tinker uart 4 ).
+
+2. led test.
+   This test will blink led 5 times.
+   Connect gpio pin 18 to led control. ( rpi4b ).
+   Connect gpio pin 16 to led control. ( radxa ).
+   Connect gpio pin 18 to led control. ( rk3328 ).
+   Connect gpio pin 16 to led control. ( tinker ).
+   Connect gpio pin  2 to led 5V.
+   Connect gpio pin  9 to led ground.
+
+3. button test.
+   Push button 10 times. The led will on/off 10 times.
+   Connect gpio pin 18 to led control. ( rpi4b ).
+   Connect gpio pin 16 to led control. ( radxa ).
+   Connect gpio pin 18 to led control. ( rk3328 ).
+   Connect gpio pin 16 to led control. ( tinker ).
+   Connect gpio pin  2 to led 5V.
+   Connect gpio pin  9 to led ground.
+   Connect gpio pin 16 to button control. ( rpi4b ).
+   Connect gpio pin 18 to button control. ( radxa ).
+   Connect gpio pin 16 to button control. ( rk3328 ).
+   Connect gpio pin 18 to button control. ( tinker ).
+   Connect gpio pin  4 to button 5V.
+   Connect gpio pin  6 to button ground.
+
+4. pwm led test.
+   This test will dim led 10 times.
+   Connect gpio pin 33 to led control. ( rpi4b pwm 1 ).
+   Connect gpio pin 13 to led control. ( radxa pwm 1 ).
+   Connect gpio pin 12 to led control. ( rk3328 pwm 2 ).
+   Connect gpio pin 32 to led control. ( tinker pwm 3 ).
+   Connect gpio pin  2 to led 5V.
+   Connect gpio pin  9 to led ground.
+
+5. i2c lcd test.
+   This test will change lcd backlight color for 5 cycles.
+   Then it will display two sentences on lcd display.
+   Connect gpio pin  3 to lcd display SDA. ( rpi4b i2c-1 ).
+   Connect gpio pin  5 to lcd display SCL.
+   Connect gpio pin  3 to lcd display SDA. ( radxa i2c-7 ).
+   Connect gpio pin  5 to lcd display SCL.
+   Connect gpio pin 27 to lcd display SDA. ( rk3328 i2c-1 ).
+   Connect gpio pin 28 to lcd display SCL.
+   Connect gpio pin  3 to lcd display SDA. ( tinker i2c-1 ).
+   Connect gpio pin  5 to lcd display SCL.
+   Connect gpio pin  2 to lcd display 5V.
+   Connect gpio pin  9 to lcd display ground.
+
+6. tongsong.
+   This test will generate song using buzzer.
+   Connect gpio pin 33 to buzzer control. ( same as 4. pwm led test )
+   Connect gpio pin  2 to buzzer 5V.
+   Connect gpio pin  9 to buzzer ground.
+
+7. servo.
+   This test will turn servo 45 degree - 90 degree - 45 degree - 0 degree etc.
+   Connect gpio pin 33 to servo control. ( same as 4. pwm led test )
+   Connect gpio pin  2 to servo 5V.
+   Connect gpio pin  9 to servo ground.
+
+8. spi oled test.
+   This test will show some ascii characters on the oled display.
+   Connect gpio pin 18 to oled display DC.  ( rpi4b spi-0 )
+   Connect gpio pin 24 to oled display CS.
+   Connect gpio pin 19 to oled display TX.
+   Connect gpio pin 23 to oled display CLK.
+   Connect gpio pin 16 to oled display DC.  ( radxa spi-2 )
+   Connect gpio pin 33 to oled display CS.
+   Connect gpio pin 29 to oled display TX.
+   Connect gpio pin  7 to oled display CLK.
+   Connect gpio pin 18 to oled display DC.  ( rk3328 spi-0 )
+   Connect gpio pin 24 to oled display CS.
+   Connect gpio pin 19 to oled display TX.
+   Connect gpio pin 23 to oled display CLK.
+   Connect gpio pin 16 to oled display DC.  ( tinker spi-2 )
+   Connect gpio pin 24 to oled display CS.
+   Connect gpio pin 19 to oled display TX.
+   Connect gpio pin 23 to oled display CLK.
+   Connect gpio pin  1 to oled display 3.3V.
+   Connect gpio pin  9 to oled display ground.
+
+-----------------------------------------------------------------------------
