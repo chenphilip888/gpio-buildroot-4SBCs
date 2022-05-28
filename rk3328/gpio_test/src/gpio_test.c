@@ -14,6 +14,8 @@
 
 #define TRUE    (1==1)
 #define FALSE   (!TRUE)
+#define line0   101
+#define line2   103
 
 //----- UART ---------------------------------------------
 
@@ -42,7 +44,7 @@ int uart_test( void ) {
     int fd;
     speed_t speed;
  
-    fd = open("/dev/ttyS4", O_RDWR | O_NOCTTY );
+    fd = open("/dev/ttyS1", O_RDWR | O_NOCTTY );
     fcntl(fd, F_SETFL, 0);
     tcgetattr(fd, &tty);
 
@@ -138,16 +140,16 @@ int led_test(void) {
     int i;
 
     printf("led test, blink led 5 times.\n");
-    initpin( 162, "out" );
+    initpin( line0, "out" );
 
     for ( i = 0; i < 5; i++ ) {
-        setpin( 162, 1 );
+        setpin( line0, 1 );
         sleep( 1 );
-        setpin( 162, 0 );
+        setpin( line0, 0 );
         sleep( 1 );
     }
 
-    closepin( 162 );
+    closepin( line0 );
     return 0;
 }
 
@@ -157,26 +159,26 @@ int button_test( void )
     int old_state;
     int current_state;
     printf( "Push button 10 times.\n" );
-    initpin( 162, "out" );
-    initpin( 163, "in" );
+    initpin( line0, "out" );
+    initpin( line2, "in" );
 
     old_state = 0;
     current_state = 0;
     for ( i = 0; i < 10; ) {
-        current_state = getpin( 163 );
+        current_state = getpin( line2 );
         if ( old_state == 0 && current_state == 1 ) {
-            setpin( 162, 1 );
+            setpin( line0, 1 );
             old_state = current_state;
         } else if ( old_state == 1 && current_state == 0 ) {
-            setpin( 162, 0 );
+            setpin( line0, 0 );
             old_state = current_state;
             i++;
         }
         usleep( 100000 );
     }
 
-    closepin( 162 );
-    closepin( 163 );
+    closepin( line0 );
+    closepin( line2 );
     return 0;
 }
 
@@ -187,13 +189,13 @@ void pwm_open( void )
     FILE *fp;
     bool isdir;
     char path[100] = "";
-    strcpy( path, "/sys/class/pwm/pwmchip2/pwm0" );
+    strcpy( path, "/sys/class/pwm/pwmchip0/pwm0" );
     struct stat st = {0};
     if ( !stat(path, &st) ) {
         isdir = S_ISDIR( st.st_mode );
     }
     if ( !isdir ) {
-        fp = fopen( "/sys/class/pwm/pwmchip2/export", "w" );
+        fp = fopen( "/sys/class/pwm/pwmchip0/export", "w" );
         fprintf( fp, "%d", 0 );
         fclose( fp );
     }
@@ -202,7 +204,7 @@ void pwm_open( void )
 void pwm_polarity( void )
 {
     FILE *fp;
-    fp = fopen( "/sys/class/pwm/pwmchip2/pwm0/polarity", "w" );
+    fp = fopen( "/sys/class/pwm/pwmchip0/pwm0/polarity", "w" );
     fputs( "normal", fp );
     fclose( fp );
 }
@@ -210,7 +212,7 @@ void pwm_polarity( void )
 void pwm_enable( void )
 {
     FILE *fp;
-    fp = fopen( "/sys/class/pwm/pwmchip2/pwm0/enable", "w" ); 
+    fp = fopen( "/sys/class/pwm/pwmchip0/pwm0/enable", "w" ); 
     fprintf( fp, "%d", 1 );
     fclose( fp );
 }
@@ -218,7 +220,7 @@ void pwm_enable( void )
 void pwm_stop( void )
 {
     FILE *fp;
-    fp = fopen( "/sys/class/pwm/pwmchip2/pwm0/enable", "w" );
+    fp = fopen( "/sys/class/pwm/pwmchip0/pwm0/enable", "w" );
     fprintf( fp, "%d", 0 );
     fclose( fp );
 }
@@ -226,7 +228,7 @@ void pwm_stop( void )
 void pwm_close( void )
 {
     FILE *fp;
-    fp = fopen( "/sys/class/pwm/pwmchip2/unexport", "w" );
+    fp = fopen( "/sys/class/pwm/pwmchip0/unexport", "w" );
     fprintf( fp, "%d", 0 );
     fclose( fp );
 }
@@ -236,7 +238,7 @@ int pwm_freq( int freq )
     FILE *fp;
     int pwm_period;
     pwm_period = 1000000000.0 / freq;
-    fp = fopen( "/sys/class/pwm/pwmchip2/pwm0/period", "w" ); 
+    fp = fopen( "/sys/class/pwm/pwmchip0/pwm0/period", "w" ); 
     fprintf( fp, "%d", pwm_period );
     fclose( fp );
     return ( pwm_period );
@@ -247,7 +249,7 @@ void pwm_duty( float duty, int pwm_period )
     FILE *fp;
     int dutycycle;
     dutycycle = duty * pwm_period; 
-    fp = fopen( "/sys/class/pwm/pwmchip2/pwm0/duty_cycle", "w" );
+    fp = fopen( "/sys/class/pwm/pwmchip0/pwm0/duty_cycle", "w" );
     fprintf( fp, "%d", dutycycle );
     fclose( fp );
 }
@@ -557,7 +559,7 @@ void ssd1306_init( int spi )
 {
     unsigned char myData[] = {0xa8, 0x3f, 0xd3, 0x0, 0x40, 0xa0, 0xc0, 0xda, 0x2, 0x81, 0x7f, 0xa4, 0xa6, 0xd5, 0x80, 0x8d, 0x14, 0xaf};
 
-    setpin( 162, 0);
+    setpin( line0, 0);
     spi_write( spi, myData, 18 );
 }
 
@@ -565,7 +567,7 @@ void set_col_addr( int spi, int col_start, int col_end )
 {
     unsigned char myData[3];
 
-    setpin( 162, 0) ;
+    setpin( line0, 0) ;
 
     myData[0] = 0x21;
     myData[1] = col_start & 0x7f;
@@ -577,7 +579,7 @@ void set_page_addr( int spi, int page_start, int page_end )
 {
     unsigned char myData[3];
 
-    setpin( 162, 0) ;
+    setpin( line0, 0) ;
 
     myData[0] = 0x22;
     myData[1] = page_start & 0x3;
@@ -589,7 +591,7 @@ void set_horizontal_mode( int spi )
 {
     unsigned char myData[2];
 
-    setpin( 162, 0) ;
+    setpin( line0, 0) ;
 
     myData[0] = 0x20;
     myData[1] = 0x00;
@@ -600,7 +602,7 @@ void set_start_page( int spi, int page )
 {
     unsigned char myData[1];
 
-    setpin( 162, 0) ;
+    setpin( line0, 0) ;
 
     myData[0] = 0xB0 | (page & 0x3);
     spi_write( spi, myData, 1 );
@@ -610,7 +612,7 @@ void set_start_col( int spi, int col )
 {
     unsigned char myData[2];
 
-    setpin( 162, 0) ;
+    setpin( line0, 0) ;
 
     myData[0] = 0xf & col;
     myData[1] = (0xf & (col >> 4)) | 0x10;
@@ -625,7 +627,7 @@ void clearDisplay( int spi )
 
     set_col_addr( spi, 0, 127 );
     set_page_addr( spi, 0, 3 );
-    setpin( 162, 1 );
+    setpin( line0, 1 );
     for (j=0; j<4; j++) {
         for (k=0; k<8; k++) {
             unsigned char myData[16];
@@ -666,7 +668,7 @@ void oledprintf( int spi, unsigned char *ch )
           } else {
               set_page_addr( spi, 2, 3 );
           }
-          setpin( 162, 1 );
+          setpin( line0, 1 );
           spi_write( spi, mychar, 12 );
           start_col += 7;
       } else {
@@ -703,7 +705,7 @@ void oledascii( int spi )
             } else {
                 set_page_addr( spi, 2, 3 );
             }
-            setpin( 162, 1 );
+            setpin( line0, 1 );
             spi_write( spi, mychar, 12 );
             start_col += 7;
             if ( start_col >= 112 ) {
@@ -724,9 +726,9 @@ int ssd1306_test( void )
     u_int32_t speed = 5000000;
     u_int8_t bits = 8;
 
-    initpin( 162, "out" ); 
-    setpin( 162, 1 );
-    if ((spi = open( "/dev/spidev2.0", O_RDWR )) < 0) {
+    initpin( line0, "out" ); 
+    setpin( line0, 1 );
+    if ((spi = open( "/dev/spidev32766.0", O_RDWR )) < 0) {
         printf("Failed to open the bus.");
         exit( 1 );
     }
@@ -750,7 +752,7 @@ int ssd1306_test( void )
     set_col_addr( spi, 0, 127 );
     set_page_addr( spi, 0, 3 );
   
-    setpin( 162, 1 );
+    setpin( line0, 1 );
     for (j=0; j < 4; j++) {
         for (i=0; i < 128; i=i+8) {
 	    unsigned char myData[] = {0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81};
@@ -765,7 +767,7 @@ int ssd1306_test( void )
     clearDisplay( spi );
     oledprintf( spi, "This is a test !\nIt works !\n" );
 
-    closepin( 162 );
+    closepin( line0 );
     close( spi );
     return 0;
 }
